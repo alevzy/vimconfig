@@ -49,7 +49,7 @@ plugins['youcompleteme'] = Plugin('youcompleteme', 'https://github.com/ycm-core/
 plugins['youcompleteme'].add_shell_command('pushd ' + os.path.join(VIM_PACK_DIR, plugins['youcompleteme'].vimdir)) 
 plugins['youcompleteme'].add_shell_command('python install.py --clangd-completer')
 plugins['youcompleteme'].add_shell_command('popd')
-plugins['youcompleteme'].git_options = ['--recurse-submodules']
+plugins['youcompleteme'].git_options = ['--recurse-submodules', '--depth=1']
 plugins['gruvbox'] = Plugin('gruvbox', 'https://github.com/morhetz/gruvbox.git', 'default/start/gruvbox')
 
 def clone_all(clone_dir):
