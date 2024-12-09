@@ -59,7 +59,8 @@ def clone_all(clone_dir):
     for plugin in plugins.values():
         print(f'Downloading {plugin.name}...')
         path = os.path.join(clone_dir, plugin.name)
-        shutil.rmtree(path)
+        if os.path.exists(path):
+            shutil.rmtree(path)
         subprocess.run(['git', 'clone'] + plugin.git_options + [plugin.url, path])
         print('Done')
 
@@ -71,7 +72,8 @@ def install(clone_dir):
             source_path = plugin.url
         else:
             source_path = os.path.join(clone_dir, plugin.name)
-            shutil.rmtree(source_path)
+            if os.path.exists(source_path):
+                shutil.rmtree(source_path)
         subprocess.run(['git', 'clone'] + plugin.git_options + [source_path, install_path])
         for command in plugin.iterate_commands():
             subprocess.run(command.split(' '))
