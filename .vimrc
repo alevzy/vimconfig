@@ -14,7 +14,11 @@ set shiftwidth=4
 set expandtab
 
 set incsearch
+set hlsearch
 
+set list
+set listchars=tab:--,trail:.,extends:>,precedes:<
+set lcs+=space:·
 
 
 set t_u7=
