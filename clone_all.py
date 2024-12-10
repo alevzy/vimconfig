@@ -12,7 +12,7 @@ class Plugin:
         self.__vimdir = vimdir
         self.__shell_commands = list()
         self.__git_options = [] 
-
+    
     @property
     def name(self):
         return self.__name
@@ -28,7 +28,7 @@ class Plugin:
     @git_options.setter
     def git_options(self, value):
         self.__git_options = value
-    def add_shell_command(self, command, cwd):
+    def add_shell_command(self, command, cwd=None):
         self.__shell_commands.append({'command': command, 'cwd': cwd})
     def add_helptags(self, helptags):
         self.add_shell_command(f'vim -u NONE -c "helptags {helptags}" -c q')
@@ -37,7 +37,7 @@ class Plugin:
             yield command
 
 plugins = dict()
-plugins['fugitive'] = Plugin('fugitive', 'https://tpope/vim-fugitive.git', 'tpope/start/fugitive')
+plugins['fugitive'] = Plugin('fugitive', 'https://github.com/tpope/vim-fugitive.git', 'tpope/start/fugitive')
 plugins['fugitive'].add_helptags('fugitive/doc')
 plugins['NERDTree'] = Plugin('NERDTree', 'https://github.com/preservim/nerdtree.git', 'vendor/start/nerdtree')
 plugins['NERDTree'].add_helptags(os.path.join(VIM_PACK_DIR, 'vendor/start/nerdtree/doc'))
@@ -62,11 +62,11 @@ def download(clone_dir):
         print('Done')
 
 def install(clone_dir):
-    for plugin in plugins:
+    for plugin in plugins.values():
         print(f'Installing {plugin.name}')
         install_path = os.path.join(VIM_PACK_DIR, plugin.vimdir)
-        if os.path.exists(source_path):
-            shutil.rmtree(source_path)
+        if os.path.exists(install_path):
+            shutil.rmtree(install_path)
         if clone_dir is None:
             source_path = plugin.url
             subprocess.run(['git', 'clone'] + plugin.git_options + [source_path, install_path])
