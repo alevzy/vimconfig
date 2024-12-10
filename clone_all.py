@@ -3,7 +3,7 @@ import os
 import subprocess
 import shutil
 
-VIM_PACK_DIR = '~/.vim/pack'
+VIM_PACK_DIR = os.path.expanduser('~/.vim/pack')
 
 class Plugin:
     def __init__(self, name, url, vimdir):
@@ -28,8 +28,8 @@ class Plugin:
     @git_options.setter
     def git_options(self, value):
         self.__git_options = value
-    def add_shell_command(self, command):
-        self.__shell_commands.append(command)
+    def add_shell_command(self, command, cwd):
+        self.__shell_commands.append({'command': command, 'cwd': cwd})
     def add_helptags(self, helptags):
         self.add_shell_command(f'vim -u NONE -c "helptags {helptags}" -c q')
     def iterate_commands(self):
@@ -37,7 +37,7 @@ class Plugin:
             yield command
 
 plugins = dict()
-plugins['fugitive'] = Plugin('fugitive', 'https://tpope.io/vim/fugitive.git', 'tpope/start/fugitive')
+plugins['fugitive'] = Plugin('fugitive', 'https://tpope/vim-fugitive.git', 'tpope/start/fugitive')
 plugins['fugitive'].add_helptags('fugitive/doc')
 plugins['NERDTree'] = Plugin('NERDTree', 'https://github.com/preservim/nerdtree.git', 'vendor/start/nerdtree')
 plugins['NERDTree'].add_helptags(os.path.join(VIM_PACK_DIR, 'vendor/start/nerdtree/doc'))
@@ -45,14 +45,11 @@ plugins['vim-airline'] = Plugin('vim-airline', 'https://github.com/vim-airline/v
 plugins['vim-airline'].add_helptags(os.path.join(VIM_PACK_DIR, 'dist/start/vim-airline/doc'))
 plugins['vim-airline-themes'] = Plugin('vim-airline-themes', 'https://github.com/vim-airline/vim-airline-themes', 'dist/start/vim-airline-themes')
 plugins['vim-airline-themes'].add_helptags(os.path.join(VIM_PACK_DIR, 'dist/start/vim-airline-themes/doc'))
-plugins['youcompleteme'] = Plugin('youcompleteme', 'https://github.com/ycm-core/YouCompleteMe', 'YouCompleteMe/opt/YouCompleteMe')
-plugins['youcompleteme'].add_shell_command('pushd ' + os.path.join(VIM_PACK_DIR, plugins['youcompleteme'].vimdir)) 
-plugins['youcompleteme'].add_shell_command('python install.py --clangd-completer')
-plugins['youcompleteme'].add_shell_command('popd')
-plugins['youcompleteme'].git_options = ['--recurse-submodules', '--depth=1']
 plugins['gruvbox'] = Plugin('gruvbox', 'https://github.com/morhetz/gruvbox.git', 'default/start/gruvbox')
+plugins['LSP'] = Plugin('LSP', 'https://github.com/yegappan/lsp.git', 'downloads/opt/lsp')
+plugins['LSP'].add_helptags(os.path.join(VIM_PACK_DIR, 'downloads/opt/lsp/doc'))
 
-def clone_all(clone_dir):
+def download(clone_dir):
     if not os.path.exists(clone_dir):
         os.makedirs(clone_dir)
     # possibly clean the directory
@@ -68,17 +65,20 @@ def install(clone_dir):
     for plugin in plugins:
         print(f'Installing {plugin.name}')
         install_path = os.path.join(VIM_PACK_DIR, plugin.vimdir)
+        if os.path.exists(source_path):
+            shutil.rmtree(source_path)
         if clone_dir is None:
             source_path = plugin.url
+            subprocess.run(['git', 'clone'] + plugin.git_options + [source_path, install_path])
         else:
             source_path = os.path.join(clone_dir, plugin.name)
-            if os.path.exists(source_path):
-                shutil.rmtree(source_path)
-        subprocess.run(['git', 'clone'] + plugin.git_options + [source_path, install_path])
+            print(f'Copy from {source_path} to {install_path}...')
+            shutil.copytree(source_path, install_path, dirs_exist_ok=True)
+            print(f'OK')
         for command in plugin.iterate_commands():
-            subprocess.run(command.split(' '))
+            subprocess.run(command['command'], shell=True, cwd=command['cwd'])
         print(f'Done')    
-    shutil.copyfile(os.path.abspath('./.vimrc'), '~/.vimrc')
+    shutil.copyfile(os.path.abspath('./.vimrc'), os.path.expanduser('~/.vimrc'))
 
 def main():
     parser = argparse.ArgumentParser()
@@ -91,7 +91,7 @@ def main():
     install_flag = args.install
     
     if clone_dir is not None and download_flag:
-        clone_all(clone_dir)
+        download(clone_dir)
     if install_flag:
         install(clone_dir)
 

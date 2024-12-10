@@ -27,7 +27,18 @@ set background=dark
 " vim-airline settings
 let g:airline_theme='base16'
 
-" YouCompleteMe settings
-packadd YouCompleteMe
+" lsp
+packadd lsp
+call LspAddServer([#{
+            \   name: 'clangd',
+            \   filetype: ['c', 'cpp'],
+            \   path: '/usr/local/bin/clangd',
+            \   args: ['--background-index', '--clang-tidy']
+            \   }])
+call LspAddServer([#{
+            \   name: 'pylsp',
+            \   filetype: 'python',
+            \   path: '/usr/local/bin/pylsp',
+            \   args: []
+            \   }])
 
-let g:ycm_enable_semantic_highlighting=1
